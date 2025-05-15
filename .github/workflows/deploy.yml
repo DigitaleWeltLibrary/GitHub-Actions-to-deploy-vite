@@ -1,0 +1,41 @@
+name: Deploy Workflow for Vite applications to GitHub Pages
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        description: 'Node.js version'
+        required: false
+        type: string
+        default: "18"
+      base-path:
+        description: 'Base path for Vite'
+        required: false
+        type: string
+        default: "/"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ inputs.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build with Vite
+        run: |
+          echo "Setting VITE base path to ${{ inputs.base-path }}"
+          sed -i "s|base: .*|base: '${{ inputs.base-path }}',|" vite.config.js
+          npm run build
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}  # Verwendet das automatisch bereitgestellte GitHub Token
+          publish_dir: ./dist
